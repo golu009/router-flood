@@ -1,0 +1,41 @@
+# Test configuration for dry-run mode
+target:
+  ip: "192.168.1.100"
+  ports: [80, 443, 22]
+  protocol_mix:
+    udp_ratio: 0.50
+    tcp_syn_ratio: 0.30
+    tcp_ack_ratio: 0.10
+    icmp_ratio: 0.05
+    ipv6_ratio: 0.03
+    arp_ratio: 0.02
+
+attack:
+  threads: 4
+  packet_rate: 200
+  duration: 3
+  packet_size_range: [64, 800]
+  randomize_timing: true
+  burst_pattern: 
+    !Sustained 
+      rate: 200
+
+safety:
+  max_threads: 100
+  max_packet_rate: 10000
+  require_private_ranges: true
+  enable_monitoring: true
+  audit_logging: true
+  dry_run: true  # Enable dry-run in config
+
+monitoring:
+  stats_interval: 2
+  system_monitoring: true
+  export_interval: null
+  performance_tracking: true
+
+export:
+  enabled: true
+  format: "Json"
+  filename_pattern: "test_dry_run"
+  include_system_stats: true

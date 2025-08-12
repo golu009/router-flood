@@ -1,0 +1,18 @@
+{
+  "session_id": "2bfc609d-0d69-476b-9ada-9879dce73485",
+  "timestamp": "2025-08-12T07:00:07.437574194Z",
+  "packets_sent": 1056,
+  "packets_failed": 49,
+  "bytes_sent": 251798,
+  "duration_secs": 3.112688916,
+  "packets_per_second": 339.2565169528814,
+  "megabits_per_second": 0.6471523670886487,
+  "protocol_breakdown": {
+    "TCP": 449,
+    "ICMP": 55,
+    "ARP": 16,
+    "IPv6": 0,
+    "UDP": 536
+  },
+  "system_stats": null
+}
