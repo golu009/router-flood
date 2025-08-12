@@ -74,7 +74,7 @@ pub mod protocols {
 pub mod defaults {
     use super::*;
     
-    pub const TARGET_IP: &str = "192.168.1.1";
+    pub const TARGET_IP: &str = "192.168.0.1";
     pub const TARGET_PORT: u16 = 80;
     pub const THREAD_COUNT: usize = 4;
     pub const PACKET_RATE: u64 = 100;
