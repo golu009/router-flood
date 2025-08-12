@@ -200,19 +200,72 @@ pub fn parse_export_format(format_str: &str) -> Result<ExportFormat> {
     }
 }
 
-/// List available network interfaces
+/// List available network interfaces with pretty formatting
 fn list_network_interfaces() {
     use crate::network::list_network_interfaces as list_interfaces;
     
-    println!("Available network interfaces:");
+    println!("\n🌐 Available Network Interfaces:\n");
+    println!("{:<20} {:<10} {:<15} {}", "Interface", "Status", "IPv4", "IPv6");
+    println!("{}", "─".repeat(80));
+    
     for iface in list_interfaces() {
+        let status = if iface.is_up() {
+            "🟢 Up"
+        } else {
+            "🔴 Down"
+        };
+        
+        let mut ipv4_addrs = Vec::new();
+        let mut ipv6_addrs = Vec::new();
+        
+        // Extract and format IP addresses
+        for ip in &iface.ips {
+            match ip {
+                pnet::ipnetwork::IpNetwork::V4(ipv4_net) => {
+                    ipv4_addrs.push(format!("{}/{}", ipv4_net.ip(), ipv4_net.prefix()));
+                }
+                pnet::ipnetwork::IpNetwork::V6(ipv6_net) => {
+                    ipv6_addrs.push(format!("{}/{}", ipv6_net.ip(), ipv6_net.prefix()));
+                }
+            }
+        }
+        
+        let ipv4_display = if ipv4_addrs.is_empty() {
+            "─".to_string()
+        } else {
+            ipv4_addrs.join(", ")
+        };
+        
+        let ipv6_display = if ipv6_addrs.is_empty() {
+            "─".to_string()
+        } else {
+            // Truncate long IPv6 addresses for display
+            let ipv6_str = ipv6_addrs.join(", ");
+            if ipv6_str.len() > 25 {
+                format!("{}...", &ipv6_str[..22])
+            } else {
+                ipv6_str
+            }
+        };
+        
         println!(
-            "  {} - {} (Up: {}, IPs: {:?})",
-            iface.name,
-            iface.description,
-            iface.is_up(),
-            iface.ips
+            "{:<20} {:<8} {:<15} {}",
+            format!("📡 {}", iface.name),
+            status,
+            ipv4_display,
+            ipv6_display
         );
+        
+        // Add description if available and non-empty
+        if !iface.description.is_empty() {
+            println!("    📝 {}", iface.description);
+        }
+        
+        // Add separator for readability
+        if ipv4_addrs.len() > 1 || ipv6_addrs.len() > 1 {
+            println!("    💡 Multiple addresses configured");
+        }
+        println!();
     }
 }
 
