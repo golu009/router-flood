@@ -6,7 +6,10 @@
 
 **Router Flood** is an educational tool designed for simulating DDoS attacks in controlled local network environments. It helps network administrators and security researchers understand router behavior under stress, identify potential vulnerabilities, and test mitigation strategies. This tool implements multiple protocols, safety checks, and monitoring features to ensure responsible usage.
 
-> **⚠️ IMPORTANT WARNING**: This tool is for **educational and authorized testing purposes only**. Unauthorized use against networks or devices without explicit permission is illegal and unethical. It is restricted to private IP ranges (e.g., 192.168.x.x, 10.x.x.x, 172.16-31.x.x) to prevent misuse. Always comply with local laws and obtain written consent before testing.
+> ## Disclaimer
+>
+> - The software is for educational and authorized testing purposes only.
+> - Unauthorized use (especially against systems you don't own or lack explicit permission to test) is strictly prohibited and may be illegal.
 
 ## Features
 
