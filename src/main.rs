@@ -1,15 +1,7 @@
-//! Router Flood - Enhanced Educational DDoS Simulation Tool
-//! 
-//! This tool is designed for educational purposes and authorized security testing only.
-//! It implements multiple safety mechanisms to prevent misuse:
-//! - Private IP validation (only allows 192.168.x.x, 10.x.x.x, 172.16-31.x.x)
-//! - Rate limiting and thread count restrictions
-//! - Comprehensive audit logging
-//! - System requirement validation
-//! - Network interface validation
-//! 
-//! WARNING: Only use on networks you own or have explicit permission to test.
-//! Unauthorized use is illegal and unethical.
+//! # Disclaimer
+//!
+//! - The software is for educational and authorized testing purposes only.
+//! - Unauthorized use (especially against systems you don't own or lack explicit permission to test) is strictly prohibited and may be illegal.
 
 use clap::{Arg, Command};
 use pnet::datalink::{self, NetworkInterface};
