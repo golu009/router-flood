@@ -1,4 +1,3 @@
-use crate::config::{ExportConfig, ExportFormat, STATS_EXPORT_DIR};
 use chrono::{DateTime, Utc};
 use csv::Writer;
 use serde::Serialize;
@@ -9,6 +8,10 @@ use std::time::Instant;
 use tokio::fs;
 use tracing::info;
 use uuid::Uuid;
+
+use crate::config::{ExportConfig, ExportFormat};
+use crate::constants::{protocols, stats as stats_constants, STATS_EXPORT_DIR};
+use crate::error::{Result, StatsError};
 
 /// Enhanced statistics tracking with export capabilities
 pub struct FloodStats {
@@ -23,12 +26,7 @@ pub struct FloodStats {
 
 impl Default for FloodStats {
     fn default() -> Self {
-        let mut protocol_stats = HashMap::new();
-        protocol_stats.insert("UDP".to_string(), AtomicU64::new(0));
-        protocol_stats.insert("TCP".to_string(), AtomicU64::new(0));
-        protocol_stats.insert("ICMP".to_string(), AtomicU64::new(0));
-        protocol_stats.insert("IPv6".to_string(), AtomicU64::new(0));
-        protocol_stats.insert("ARP".to_string(), AtomicU64::new(0));
+        let protocol_stats = Self::init_protocol_stats();
         Self {
             packets_sent: Arc::new(AtomicU64::new(0)),
             packets_failed: Arc::new(AtomicU64::new(0)),
@@ -66,13 +64,8 @@ pub struct SystemStats {
 
 impl FloodStats {
     pub fn new(export_config: Option<ExportConfig>) -> Self {
-        let mut protocol_stats = HashMap::new();
-        protocol_stats.insert("UDP".to_string(), AtomicU64::new(0));
-        protocol_stats.insert("TCP".to_string(), AtomicU64::new(0));
-        protocol_stats.insert("ICMP".to_string(), AtomicU64::new(0));
-        protocol_stats.insert("IPv6".to_string(), AtomicU64::new(0));
-        protocol_stats.insert("ARP".to_string(), AtomicU64::new(0));
-
+        let protocol_stats = Self::init_protocol_stats();
+        
         Self {
             start_time: Instant::now(),
             session_id: Uuid::new_v4().to_string(),
@@ -82,6 +75,14 @@ impl FloodStats {
             packets_failed: Arc::new(AtomicU64::new(0)),
             bytes_sent: Arc::new(AtomicU64::new(0)),
         }
+    }
+
+    /// Initialize protocol statistics map with all supported protocols
+    fn init_protocol_stats() -> HashMap<String, AtomicU64> {
+        protocols::ALL_PROTOCOLS
+            .iter()
+            .map(|&protocol| (protocol.to_string(), AtomicU64::new(0)))
+            .collect()
     }
 
     pub fn increment_sent(&self, bytes: u64, protocol: &str) {
@@ -104,7 +105,7 @@ impl FloodStats {
 
         let elapsed = self.start_time.elapsed().as_secs_f64();
         let pps = sent as f64 / elapsed;
-        let mbps = (bytes as f64 * 8.0) / (elapsed * 1_000_000.0);
+        let mbps = (bytes as f64 * 8.0) / (elapsed * stats_constants::MEGABITS_DIVISOR);
 
         println!(
             "📊 Stats - Sent: {}, Failed: {}, Rate: {:.1} pps, {:.2} Mbps",
@@ -124,12 +125,12 @@ impl FloodStats {
             println!(
                 "   System: CPU {:.1}%, Memory: {:.1} MB",
                 sys_stats.cpu_usage,
-                sys_stats.memory_usage / 1024 / 1024
+                sys_stats.memory_usage / stats_constants::BYTES_TO_MB_DIVISOR
             );
         }
     }
 
-    pub async fn export_stats(&self, system_stats: Option<&SystemStats>) -> Result<(), String> {
+    pub async fn export_stats(&self, system_stats: Option<&SystemStats>) -> Result<()> {
         if let Some(export_config) = &self.export_config {
             if !export_config.enabled {
                 return Ok(());
@@ -140,7 +141,7 @@ impl FloodStats {
             // Ensure export directory exists
             fs::create_dir_all(STATS_EXPORT_DIR)
                 .await
-                .map_err(|e| format!("Failed to create export directory: {}", e))?;
+                .map_err(|e| StatsError::ExportFailed(format!("Failed to create export directory: {}", e)))?;
 
             match export_config.format {
                 ExportFormat::Json => {
@@ -165,7 +166,7 @@ impl FloodStats {
 
         let elapsed = self.start_time.elapsed().as_secs_f64();
         let pps = sent as f64 / elapsed;
-        let mbps = (bytes as f64 * 8.0) / (elapsed * 1_000_000.0);
+        let mbps = (bytes as f64 * 8.0) / (elapsed * stats_constants::MEGABITS_DIVISOR);
 
         let protocol_breakdown: HashMap<String, u64> = self
             .protocol_stats
@@ -191,7 +192,7 @@ impl FloodStats {
         &self,
         stats: &SessionStats,
         config: &ExportConfig,
-    ) -> Result<(), String> {
+    ) -> Result<()> {
         let timestamp = Utc::now().format("%Y%m%d_%H%M%S");
         let filename = format!(
             "{}/{}_stats_{}.json",
@@ -199,11 +200,11 @@ impl FloodStats {
         );
 
         let json = serde_json::to_string_pretty(stats)
-            .map_err(|e| format!("Failed to serialize stats: {}", e))?;
+            .map_err(|e| StatsError::SerializationError(format!("Failed to serialize stats: {}", e)))?;
 
         fs::write(&filename, json)
             .await
-            .map_err(|e| format!("Failed to write JSON stats: {}", e))?;
+            .map_err(|e| StatsError::FileWriteError(format!("Failed to write JSON stats: {}", e)))?;
 
         info!("Stats exported to {}", filename);
         Ok(())
@@ -213,7 +214,7 @@ impl FloodStats {
         &self,
         stats: &SessionStats,
         config: &ExportConfig,
-    ) -> Result<(), String> {
+    ) -> Result<()> {
         let timestamp = Utc::now().format("%Y%m%d_%H%M%S");
         let filename = format!(
             "{}/{}_stats_{}.csv",
@@ -221,7 +222,7 @@ impl FloodStats {
         );
 
         let file = std::fs::File::create(&filename)
-            .map_err(|e| format!("Failed to create CSV file: {}", e))?;
+            .map_err(|e| StatsError::FileWriteError(format!("Failed to create CSV file: {}", e)))?;
 
         let mut writer = Writer::from_writer(file);
 
@@ -242,9 +243,9 @@ impl FloodStats {
                 "ipv6_packets",
                 "arp_packets",
             ])
-            .map_err(|e| format!("Failed to write CSV header: {}", e))?;
+            .map_err(|e| StatsError::FileWriteError(format!("Failed to write CSV header: {}", e)))?;
 
-        // Write data
+        // Write data - using constants for protocol names
         writer
             .write_record(&[
                 &stats.session_id,
@@ -255,17 +256,17 @@ impl FloodStats {
                 &stats.duration_secs.to_string(),
                 &stats.packets_per_second.to_string(),
                 &stats.megabits_per_second.to_string(),
-                &stats.protocol_breakdown.get("UDP").unwrap_or(&0).to_string(),
-                &stats.protocol_breakdown.get("TCP").unwrap_or(&0).to_string(),
-                &stats.protocol_breakdown.get("ICMP").unwrap_or(&0).to_string(),
-                &stats.protocol_breakdown.get("IPv6").unwrap_or(&0).to_string(),
-                &stats.protocol_breakdown.get("ARP").unwrap_or(&0).to_string(),
+                &stats.protocol_breakdown.get(protocols::UDP).unwrap_or(&0).to_string(),
+                &stats.protocol_breakdown.get(protocols::TCP).unwrap_or(&0).to_string(),
+                &stats.protocol_breakdown.get(protocols::ICMP).unwrap_or(&0).to_string(),
+                &stats.protocol_breakdown.get(protocols::IPV6).unwrap_or(&0).to_string(),
+                &stats.protocol_breakdown.get(protocols::ARP).unwrap_or(&0).to_string(),
             ])
-            .map_err(|e| format!("Failed to write CSV data: {}", e))?;
+            .map_err(|e| StatsError::FileWriteError(format!("Failed to write CSV data: {}", e)))?;
 
         writer
             .flush()
-            .map_err(|e| format!("Failed to flush CSV: {}", e))?;
+            .map_err(|e| StatsError::FileWriteError(format!("Failed to flush CSV: {}", e)))?;
         info!("Stats exported to {}", filename);
         Ok(())
     }
