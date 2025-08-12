@@ -1,0 +1,25 @@
+[package]
+name = "router-flood"
+version = "2.0.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "Educational DDoS simulation tool for local network stress testing"
+license = "MIT"
+keywords = ["network", "testing", "ddos", "simulation", "stress-test"]
+categories = ["network-programming", "simulation"]
+
+[dependencies]
+pnet = "0.35.0"
+rand = "0.8.5"
+clap = { version = "4.5.4", features = ["derive"] }
+tokio = { version = "1.38.0", features = ["full", "signal"] }
+libc = "0.2.155"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4"
+env_logger = "0.11"
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.8"
