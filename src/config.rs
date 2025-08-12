@@ -2,17 +2,11 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tracing::info;
 
-pub const CONFIG_FILE: &str = "router_flood_config.yaml";
-pub const MAX_THREADS: usize = 100;
-pub const MAX_PACKET_RATE: u64 = 10000;
-pub const MIN_PAYLOAD_SIZE: usize = 20;
-pub const MAX_PAYLOAD_SIZE: usize = 1400;
-pub const STATS_EXPORT_DIR: &str = "exports";
-pub const PRIVATE_RANGES: &[(u32, u32)] = &[
-    (0xC0A80000, 0xFFFF0000), // 192.168.0.0/16
-    (0x0A000000, 0xFF000000), // 10.0.0.0/8
-    (0xAC100000, 0xFFF00000), // 172.16.0.0/12
-];
+use crate::constants::{
+    defaults, MAX_THREADS, MAX_PACKET_RATE, MIN_PAYLOAD_SIZE, MAX_PAYLOAD_SIZE,
+    DEFAULT_CONFIG_FILE,
+};
+use crate::error::{ConfigError, Result};
 
 /// Configuration structures for YAML config file support
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -93,8 +87,8 @@ pub enum BurstPattern {
 }
 
 /// Load configuration from YAML file
-pub fn load_config(config_path: Option<&str>) -> Result<Config, String> {
-    let config_file = config_path.unwrap_or(CONFIG_FILE);
+pub fn load_config(config_path: Option<&str>) -> Result<Config> {
+    let config_file = config_path.unwrap_or(DEFAULT_CONFIG_FILE);
 
     if !Path::new(config_file).exists() {
         info!("Config file {} not found, using defaults", config_file);
@@ -102,33 +96,34 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config, String> {
     }
 
     let config_str = std::fs::read_to_string(config_file)
-        .map_err(|e| format!("Failed to read config file: {}", e))?;
+        .map_err(|e| ConfigError::FileNotFound(format!("Failed to read config file: {}", e)))?;
 
     serde_yaml::from_str(&config_str)
-        .map_err(|e| format!("Failed to parse config file: {}", e))
+        .map_err(|e| ConfigError::ParseError(format!("Failed to parse config file: {}", e)))
+        .map_err(Into::into)
 }
 
 pub fn get_default_config() -> Config {
     Config {
         target: TargetConfig {
-            ip: "192.168.1.1".to_string(),
-            ports: vec![80],
+            ip: defaults::TARGET_IP.to_string(),
+            ports: vec![defaults::TARGET_PORT],
             protocol_mix: ProtocolMix {
-                udp_ratio: 0.6,
-                tcp_syn_ratio: 0.25,
-                tcp_ack_ratio: 0.05,
-                icmp_ratio: 0.05,
-                ipv6_ratio: 0.03,
-                arp_ratio: 0.02,
+                udp_ratio: defaults::UDP_RATIO,
+                tcp_syn_ratio: defaults::TCP_SYN_RATIO,
+                tcp_ack_ratio: defaults::TCP_ACK_RATIO,
+                icmp_ratio: defaults::ICMP_RATIO,
+                ipv6_ratio: defaults::IPV6_RATIO,
+                arp_ratio: defaults::ARP_RATIO,
             },
             interface: None,
         },
         attack: AttackConfig {
-            threads: 4,
-            packet_rate: 100,
+            threads: defaults::THREAD_COUNT,
+            packet_rate: defaults::PACKET_RATE,
             duration: None,
             packet_size_range: (MIN_PAYLOAD_SIZE, MAX_PAYLOAD_SIZE),
-            burst_pattern: BurstPattern::Sustained { rate: 100 },
+            burst_pattern: BurstPattern::Sustained { rate: defaults::PACKET_RATE },
             randomize_timing: true,
         },
         safety: SafetyConfig {
@@ -140,15 +135,15 @@ pub fn get_default_config() -> Config {
             dry_run: false,
         },
         monitoring: MonitoringConfig {
-            stats_interval: 5,
+            stats_interval: defaults::STATS_INTERVAL,
             system_monitoring: true,
-            export_interval: Some(60),
+            export_interval: Some(crate::constants::DEFAULT_EXPORT_INTERVAL),
             performance_tracking: true,
         },
         export: ExportConfig {
             enabled: false,
             format: ExportFormat::Json,
-            filename_pattern: "router_flood".to_string(),
+            filename_pattern: defaults::FILENAME_PATTERN.to_string(),
             include_system_stats: true,
         },
     }
