@@ -29,21 +29,19 @@ attack:
   packet_size_range: [64, 1400]  # Min and max packet sizes in bytes
   randomize_timing: true       # Add jitter to packet timing
   
-  # Burst pattern configuration
-  burst_pattern:
-    # Choose one of the following patterns:
+  # Burst pattern configuration (YAML tag format required)
+  burst_pattern: !Sustained
+    rate: 500
     
-    # Sustained load (constant rate)
-    Sustained:
-      rate: 500
-    
+    # Alternative patterns (uncomment to use):
+    # 
     # # Burst pattern (alternating high/low intensity)
-    # Bursts:
+    # burst_pattern: !Bursts
     #   burst_size: 20
     #   burst_interval_ms: 1000
-    
+    # 
     # # Ramp pattern (gradually increasing load)
-    # Ramp:
+    # burst_pattern: !Ramp
     #   start_rate: 100
     #   end_rate: 1000
     #   ramp_duration: 60
@@ -67,7 +65,7 @@ monitoring:
 export:
   # Statistics export configuration
   enabled: true                 # Enable statistics export
-  format: "Both"               # Export format: "Json", "Csv", or "Both"
+  format: Both                 # Export format: Json, Csv, or Both
   filename_pattern: "router_flood"  # Filename prefix for exports
   include_system_stats: true   # Include system resource stats in exports
 

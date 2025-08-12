@@ -27,7 +27,7 @@ pub enum RouterFloodError {
     Io(io::Error),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ConfigError {
     FileNotFound(String),
     ParseError(String),
@@ -49,6 +49,7 @@ pub enum ValidationError {
     ExceedsLimit { field: String, value: u64, limit: u64 },
     SystemRequirement(String),
     PrivilegeRequired(String),
+    PermissionDenied(String),
 }
 
 #[derive(Debug)]
@@ -129,6 +130,7 @@ impl fmt::Display for ValidationError {
             }
             ValidationError::SystemRequirement(msg) => write!(f, "System requirement not met: {}", msg),
             ValidationError::PrivilegeRequired(msg) => write!(f, "Privilege required: {}", msg),
+            ValidationError::PermissionDenied(msg) => write!(f, "Permission denied: {}", msg),
         }
     }
 }

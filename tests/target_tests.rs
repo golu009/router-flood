@@ -27,7 +27,7 @@ fn test_multi_port_target_single_port() {
     
     // Should always return the same port
     for _ in 0..10 {
-        assert_eq!(target.get_next_port(), 80);
+        assert_eq!(target.next_port(), 80);
     }
 }
 
@@ -40,7 +40,7 @@ fn test_multi_port_target_port_rotation() {
     
     // Get more ports than we have to ensure rotation
     for _ in 0..20 {
-        let port = target.get_next_port();
+        let port = target.next_port();
         assert!(ports.contains(&port), "Returned port should be in original list");
         seen_ports.insert(port);
     }
@@ -67,7 +67,7 @@ fn test_multi_port_target_thread_safety() {
         thread::spawn(move || {
             let mut thread_ports = Vec::new();
             for _ in 0..requests_per_thread {
-                thread_ports.push(target_clone.get_next_port());
+                thread_ports.push(target_clone.next_port());
             }
             thread_ports
         })
@@ -101,7 +101,7 @@ fn test_multi_port_target_distribution() {
     let mut port_counts = std::collections::HashMap::new();
     
     for _ in 0..num_requests {
-        let port = target.get_next_port();
+        let port = target.next_port();
         *port_counts.entry(port).or_insert(0) += 1;
     }
     
@@ -132,7 +132,7 @@ fn test_multi_port_target_with_duplicate_ports() {
     
     // Verify all returned ports are valid
     for _ in 0..20 {
-        let port = target.get_next_port();
+        let port = target.next_port();
         assert!(returned_ports.contains(&port));
     }
 }
@@ -147,7 +147,7 @@ fn test_multi_port_target_edge_case_ports() {
     
     // Should handle all edge case ports
     for _ in 0..20 {
-        let port = target.get_next_port();
+        let port = target.next_port();
         assert!(edge_ports.contains(&port));
         assert!(port >= 1 && port <= 65535);
     }
@@ -165,7 +165,7 @@ fn test_multi_port_target_large_port_list() {
     
     // Get enough samples to likely see most ports
     for _ in 0..5000 {
-        let port = target.get_next_port();
+        let port = target.next_port();
         assert!(large_port_list.contains(&port));
         seen_ports.insert(port);
     }
@@ -186,7 +186,7 @@ fn test_multi_port_target_consistency() {
     
     // The ports list should not change after creation
     for _ in 0..100 {
-        target.get_next_port(); // This might change internal state
+        target.next_port(); // This might change internal state
         assert_eq!(target.get_ports(), ports); // But this should stay the same
     }
 }
@@ -210,7 +210,7 @@ fn test_multi_port_target_concurrent_port_access() {
             barrier_clone.wait();
             
             // All threads request a port at the same time
-            target_clone.get_next_port()
+            target_clone.next_port()
         })
     }).collect();
     

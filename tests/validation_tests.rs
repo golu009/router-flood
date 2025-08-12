@@ -58,21 +58,23 @@ fn test_target_ip_validation_multicast_failure() {
 
 #[test]
 fn test_comprehensive_security_validation_success() {
-    let mut config = get_default_config();
-    config.target.ip = "192.168.1.1".to_string();
-    config.target.ports = vec![8080, 3000];
-    config.safety.dry_run = true;
+    let ip: IpAddr = "192.168.1.1".parse().unwrap();
+    let ports = vec![8080, 3000];
+    let threads = 4;
+    let rate = 100;
     
-    let result = validate_comprehensive_security(&config);
+    let result = validate_comprehensive_security(&ip, &ports, threads, rate);
     assert!(result.is_ok(), "Valid private IP configuration should pass validation");
 }
 
 #[test]
 fn test_comprehensive_security_validation_failure() {
-    let mut config = get_default_config();
-    config.target.ip = "127.0.0.1".to_string(); // Loopback
+    let ip: IpAddr = "127.0.0.1".parse().unwrap(); // Loopback
+    let ports = vec![80];
+    let threads = 4;
+    let rate = 100;
     
-    let result = validate_comprehensive_security(&config);
+    let result = validate_comprehensive_security(&ip, &ports, threads, rate);
     assert!(result.is_err(), "Loopback IP should fail validation");
 }
 

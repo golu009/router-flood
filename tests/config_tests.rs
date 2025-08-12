@@ -5,6 +5,7 @@
 use router_flood::config::*;
 use tempfile::NamedTempFile;
 use std::io::Write;
+use std::str::FromStr;
 
 #[test]
 fn test_default_config_values() {
@@ -94,6 +95,10 @@ attack:
   threads: 8
   packet_rate: 500
   duration: 60
+  packet_size_range: [64, 1500]
+  burst_pattern: !Sustained
+    rate: 500
+  randomize_timing: true
 
 safety:
   require_private_ranges: true
@@ -105,19 +110,21 @@ safety:
 
 export:
   enabled: true
-  format: "json"
-  directory: "exports"
+  format: Json
+  filename_pattern: "test_export"
+  include_system_stats: true
 
 monitoring:
   system_monitoring: true
   stats_interval: 5
   export_interval: 30
+  performance_tracking: true
 "#;
 
     let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
     temp_file.write_all(yaml_content.as_bytes()).expect("Failed to write to temp file");
     
-    let config = load_config(temp_file.path().to_str().unwrap()).expect("Failed to load config");
+    let config = load_config(Some(temp_file.path().to_str().unwrap())).expect("Failed to load config");
     
     // Verify loaded values
     assert_eq!(config.target.ip, "10.0.0.1");
@@ -146,14 +153,18 @@ attack:
     temp_file.write_all(invalid_yaml.as_bytes()).expect("Failed to write to temp file");
     
     // Should return error for invalid YAML structure
-    let result = load_config(temp_file.path().to_str().unwrap());
+    let result = load_config(Some(temp_file.path().to_str().unwrap()));
     assert!(result.is_err());
 }
 
 #[test]
 fn test_nonexistent_config_file() {
-    let result = load_config("nonexistent_file.yaml");
-    assert!(result.is_err());
+    let result = load_config(Some("nonexistent_file.yaml"));
+    // Should succeed and return defaults when file not found
+    assert!(result.is_ok());
+    let config = result.unwrap();
+    // Should have default values
+    assert_eq!(config.target.ip, "192.168.0.1");
 }
 
 #[test]

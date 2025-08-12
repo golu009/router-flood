@@ -3,13 +3,14 @@
 //! Tests for system monitoring and resource tracking functionality.
 
 use router_flood::monitor::*;
+use router_flood::stats::SystemStats;
 
 #[test]
 fn test_system_monitor_creation() {
-    let monitor = SystemMonitor::new(true);
+    let _monitor = SystemMonitor::new(true);
     // Should create without panicking
     
-    let disabled_monitor = SystemMonitor::new(false);
+    let _disabled_monitor = SystemMonitor::new(false);
     // Should also create when disabled
 }
 
@@ -25,8 +26,8 @@ async fn test_system_monitor_stats_collection() {
         assert!(stats.cpu_usage <= 100.0, "CPU usage should not exceed 100%");
         
         // Memory usage should be positive
-        assert!(stats.memory_usage_mb > 0, "Memory usage should be positive");
-        assert!(stats.memory_usage_mb < 1024 * 1024, "Memory usage should be reasonable (< 1TB)");
+        assert!(stats.memory_usage > 0, "Memory usage should be positive");
+        assert!(stats.memory_usage < 1024 * 1024 * 1024 * 1024, "Memory usage should be reasonable (< 1TB)");
     }
 }
 
@@ -54,13 +55,13 @@ async fn test_system_monitor_multiple_calls() {
         // Values should be reasonable and potentially different
         assert!(s1.cpu_usage >= 0.0 && s1.cpu_usage <= 100.0);
         assert!(s2.cpu_usage >= 0.0 && s2.cpu_usage <= 100.0);
-        assert!(s1.memory_usage_mb > 0);
-        assert!(s2.memory_usage_mb > 0);
+        assert!(s1.memory_usage > 0);
+        assert!(s2.memory_usage > 0);
         
         // Memory usage shouldn't change drastically in 100ms
-        let memory_diff = (s2.memory_usage_mb as i64 - s1.memory_usage_mb as i64).abs();
-        assert!(memory_diff < 1000, "Memory usage shouldn't change drastically: {} vs {}", 
-               s1.memory_usage_mb, s2.memory_usage_mb);
+        let memory_diff = (s2.memory_usage as i64 - s1.memory_usage as i64).abs();
+        assert!(memory_diff < 1024 * 1024 * 1024, "Memory usage shouldn't change drastically: {} vs {}", 
+               s1.memory_usage, s2.memory_usage);
     }
 }
 
@@ -71,9 +72,7 @@ async fn test_system_stats_structure() {
     if let Some(stats) = monitor.get_system_stats().await {
         // Test that SystemStats has the expected fields and reasonable values
         assert!(stats.cpu_usage.is_finite(), "CPU usage should be a finite number");
-        assert!(stats.memory_usage_mb.is_finite(), "Memory usage should be a finite number");
         assert!(!stats.cpu_usage.is_nan(), "CPU usage should not be NaN");
-        assert!(!stats.memory_usage_mb.is_nan(), "Memory usage should not be NaN");
     }
 }
 
@@ -102,7 +101,7 @@ async fn test_concurrent_system_monitoring() {
         
         if let Some(stats) = stats {
             assert!(stats.cpu_usage >= 0.0 && stats.cpu_usage <= 100.0);
-            assert!(stats.memory_usage_mb > 0.0);
+            assert!(stats.memory_usage > 0);
         }
     }
 }
@@ -111,11 +110,14 @@ async fn test_concurrent_system_monitoring() {
 fn test_system_stats_display() {
     let stats = SystemStats {
         cpu_usage: 25.5,
-        memory_usage_mb: 1024.0,
+        memory_usage: 1024 * 1024 * 1024, // 1GB in bytes
+        memory_total: 8 * 1024 * 1024 * 1024, // 8GB
+        network_sent: 0,
+        network_received: 0,
     };
     
     // Test that we can format the stats
-    let formatted = format!("CPU: {:.1}%, Memory: {:.0} MB", stats.cpu_usage, stats.memory_usage_mb);
+    let formatted = format!("CPU: {:.1}%, Memory: {:.0} MB", stats.cpu_usage, stats.memory_usage / (1024 * 1024));
     assert_eq!(formatted, "CPU: 25.5%, Memory: 1024 MB");
 }
 
@@ -123,18 +125,18 @@ fn test_system_stats_display() {
 fn test_system_stats_edge_values() {
     // Test with edge case values
     let edge_stats = vec![
-        SystemStats { cpu_usage: 0.0, memory_usage_mb: 1.0 },
-        SystemStats { cpu_usage: 100.0, memory_usage_mb: 32000.0 },
-        SystemStats { cpu_usage: 0.1, memory_usage_mb: 0.1 },
+        SystemStats { cpu_usage: 0.0, memory_usage: 1024 * 1024, memory_total: 8 * 1024 * 1024 * 1024, network_sent: 0, network_received: 0 },
+        SystemStats { cpu_usage: 100.0, memory_usage: 32 * 1024 * 1024 * 1024, memory_total: 64 * 1024 * 1024 * 1024, network_sent: 0, network_received: 0 },
+        SystemStats { cpu_usage: 0.1, memory_usage: 100 * 1024, memory_total: 8 * 1024 * 1024 * 1024, network_sent: 0, network_received: 0 },
     ];
     
     for stats in edge_stats {
         assert!(stats.cpu_usage >= 0.0);
         assert!(stats.cpu_usage <= 100.0);
-        assert!(stats.memory_usage_mb >= 0.0);
+        assert!(stats.memory_usage >= 0);
         
         // Should be able to format without issues
-        let _formatted = format!("{:.2}% CPU, {:.1} MB RAM", stats.cpu_usage, stats.memory_usage_mb);
+        let _formatted = format!("{:.2}% CPU, {:.1} MB RAM", stats.cpu_usage, stats.memory_usage as f64 / (1024.0 * 1024.0));
     }
 }
 
@@ -167,6 +169,6 @@ async fn test_monitoring_under_load() {
     if let Some(stats) = stats {
         // CPU usage might be higher due to our load, but should still be valid
         assert!(stats.cpu_usage >= 0.0 && stats.cpu_usage <= 100.0);
-        assert!(stats.memory_usage_mb > 0.0);
+        assert!(stats.memory_usage > 0);
     }
 }

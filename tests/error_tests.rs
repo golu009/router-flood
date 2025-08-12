@@ -13,7 +13,7 @@ fn test_config_error_creation() {
         reason: "must be a number".to_string(),
     };
     
-    assert_eq!(error.to_string(), "Invalid value for field 'threads': 'abc' - must be a number");
+    assert_eq!(error.to_string(), "Invalid value 'abc' for field 'threads': must be a number");
 }
 
 #[test]
@@ -35,7 +35,7 @@ fn test_validation_error_creation() {
         reason: "not in private range".to_string(),
     };
     
-    assert_eq!(error.to_string(), "Invalid IP address 8.8.8.8: not in private range");
+    assert_eq!(error.to_string(), "IP address 8.8.8.8 is invalid: not in private range");
 }
 
 #[test]

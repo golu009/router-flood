@@ -11,7 +11,9 @@ fn test_packet_type_display() {
     assert_eq!(PacketType::TcpSyn.to_string(), "TCP-SYN");
     assert_eq!(PacketType::TcpAck.to_string(), "TCP-ACK");
     assert_eq!(PacketType::Icmp.to_string(), "ICMP");
-    assert_eq!(PacketType::Ipv6.to_string(), "IPv6");
+    assert_eq!(PacketType::Ipv6Udp.to_string(), "IPv6-UDP");
+    assert_eq!(PacketType::Ipv6Tcp.to_string(), "IPv6-TCP");
+    assert_eq!(PacketType::Ipv6Icmp.to_string(), "IPv6-ICMP");
     assert_eq!(PacketType::Arp.to_string(), "ARP");
 }
 

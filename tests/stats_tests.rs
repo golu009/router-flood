@@ -64,10 +64,10 @@ fn test_packet_counting() {
 fn test_failed_packet_counting() {
     let stats = FloodStats::default();
     
-    stats.increment_failed_packets();
+    stats.increment_failed();
     assert_eq!(stats.packets_failed.load(Ordering::Relaxed), 1);
     
-    stats.increment_failed_packets();
+    stats.increment_failed();
     assert_eq!(stats.packets_failed.load(Ordering::Relaxed), 2);
     
     // Failed packets should not affect sent count
@@ -152,7 +152,7 @@ fn test_concurrent_stats_updates() {
     let expected_bytes = expected_packets * 64;
     
     assert_eq!(stats.packets_sent.load(Ordering::Relaxed), expected_packets);
-    assert_eq!(stats.udp_packets.load(Ordering::Relaxed), expected_packets);
+    assert_eq!(stats.protocol_stats["UDP"].load(Ordering::Relaxed), expected_packets);
     assert_eq!(stats.bytes_sent.load(Ordering::Relaxed), expected_bytes);
 }
 
