@@ -1,385 +1,202 @@
-# Router Flood - Network Stress Testing Tool
+# Router Flood
 
-[![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+![Rust](https://img.shields.io/badge/Rust-1.70%2B-orange?logo=rust)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Version](https://img.shields.io/badge/Version-2.0.0-green)
 
-**⚠️ EDUCATIONAL PURPOSES ONLY - LOCAL NETWORK TESTING**
+**Router Flood** is an educational tool designed for simulating DDoS attacks in controlled local network environments. It helps network administrators and security researchers understand router behavior under stress, identify potential vulnerabilities, and test mitigation strategies. This tool implements multiple protocols, safety checks, and monitoring features to ensure responsible usage.
 
-A sophisticated DDoS simulation tool built in Rust for educational purposes and local network stress testing. This tool helps network administrators and security researchers understand network vulnerabilities and test the resilience of network infrastructure.
+> **⚠️ IMPORTANT WARNING**: This tool is for **educational and authorized testing purposes only**. Unauthorized use against networks or devices without explicit permission is illegal and unethical. It is restricted to private IP ranges (e.g., 192.168.x.x, 10.x.x.x, 172.16-31.x.x) to prevent misuse. Always comply with local laws and obtain written consent before testing.
 
-## 🚨 Security and Legal Notice
+## Features
 
-**CRITICAL WARNINGS:**
-- ✅ **ONLY** use on networks you own or have explicit written permission to test
-- ✅ **ONLY** targets private IP ranges (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
-- ❌ **NEVER** target public IP addresses or networks you don't control
-- ❌ Using this tool against unauthorized targets is **ILLEGAL** and unethical
-- 🔒 Built-in safety mechanisms prevent accidental misuse
+- **Multi-Protocol Support**: Simulates traffic using UDP, TCP (SYN/ACK), ICMP, IPv6 (UDP/TCP/ICMP), and ARP protocols with configurable ratios.
+- **Safety Mechanisms**:
+  - Validates targets against private IP ranges only.
+  - Enforces thread and packet rate limits (max 100 threads, 10,000 PPS).
+  - Comprehensive audit logging for all sessions.
+  - System requirement checks (e.g., root privileges for raw sockets).
+- **Performance Monitoring**: Real-time statistics, system resource tracking (CPU, memory), and optional exports to JSON/CSV.
+- **Configuration Flexibility**: YAML-based config file for easy customization, with CLI overrides.
+- **Dry-Run Mode**: Simulate attacks without sending packets for safe configuration testing.
+- **Burst Patterns**: Supports sustained, burst, or ramp-up traffic patterns.
+- **Graceful Shutdown**: Handles Ctrl+C and duration limits with final stats reporting.
 
-## 🎯 Features
-
-### Core Capabilities
-- **Multi-Protocol Flooding**: UDP, TCP SYN, TCP ACK, ICMP
-- **Realistic Traffic Patterns**: Variable packet sizes, randomized timing
-- **High Performance**: Async/concurrent architecture using Tokio
-- **Production Ready**: Comprehensive error handling and monitoring
-- **Plugin System**: Extensible attack patterns and monitoring plugins
-
-### Security Features
-- 🛡️ **Private IP Enforcement**: Blocks public IP targeting
-- 🔢 **Rate Limiting**: Configurable safety limits
-- 📊 **Real-time Monitoring**: Live statistics and performance metrics
-- 🎛️ **Graceful Shutdown**: Proper cleanup on Ctrl+C
-- 📝 **Audit Logging**: Comprehensive logging for analysis
-
-### Advanced Features
-- 📋 **JSON Configuration**: Flexible configuration management
-- 🔄 **Burst Modes**: Simulate realistic attack patterns
-- 📈 **Performance Metrics**: Detailed bandwidth and packet statistics
-- 🔌 **Plugin Architecture**: Extensible with custom attack patterns
-- ⏱️ **Duration Control**: Time-limited testing sessions
-
-## 🚀 Quick Start
+## Installation
 
 ### Prerequisites
-- **Root privileges** (required for raw socket access)
-- **Rust 1.70+** (tested with latest stable)
-- **Linux system** (tested on Ubuntu, Debian, Arch)
 
-### Installation
+- Rust 1.70+ (with Cargo).
+- Root privileges for raw socket access (skipped in dry-run mode).
+- Linux/macOS (pnet library requires platform-specific features; tested on Linux).
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/router-flood.git
-cd router-flood
+### Building from Source
 
-# Build the project (optimized)
-cargo build --release
+1. Clone the repository:
+   ```
+   git clone https://github.com/paulshpilsher/router-flood.git
+   cd router-flood
+   ```
 
-# Install system-wide (optional)
-sudo cp target/release/router-flood /usr/local/bin/
+2. Build the binary:
+   ```
+   cargo build --release
+   ```
+
+3. The executable will be available at `target/release/router-flood`.
+
+### Dependencies
+
+The tool relies on the following crates (managed via Cargo.toml):
+
+- `pnet`: For low-level packet crafting and sending.
+- `rand`: Random number generation for packet variation.
+- `clap`: Command-line argument parsing.
+- `tokio`: Asynchronous runtime for concurrent tasks.
+- `serde` & `serde_yaml`: Configuration serialization.
+- `log` & `env_logger`: Logging.
+- `chrono`: Timestamp handling.
+- `csv`: CSV export.
+- `sysinfo`: System monitoring.
+- `tracing`: Enhanced logging.
+- `config`: Configuration management.
+- `uuid`: Session ID generation.
+
+For development: `tokio-test`, `tempfile`.
+
+## Usage
+
+Run the tool with root privileges (e.g., `sudo`) unless using `--dry-run`.
+
+### Basic Command
+
+```
+sudo ./target/release/router-flood --target <IP> --ports <PORTS>
 ```
 
-### Basic Usage
-
-```bash
-# Simple HTTP flood test (requires sudo)
-sudo ./target/release/router-flood --target 192.168.1.1 --port 80
-
-# Advanced usage with custom parameters
-sudo ./target/release/router-flood \
-    --target 192.168.1.1 \
-    --port 443 \
-    --threads 8 \
-    --rate 500 \
-    --duration 60
-```
-
-## 📖 Configuration
-
-### Command Line Options
+### Command-Line Options
 
 ```
-Router Flood - Network Stress Tester 2.0
-Educational DDoS simulation for local network testing
+Router Flood - Enhanced Network Stress Tester
 
 USAGE:
-    router-flood [OPTIONS] --target <IP> --port <PORT>
+    router-flood [OPTIONS]
 
 OPTIONS:
-    -t, --target <IP>        Target router IP (must be private range)
-    -p, --port <PORT>        Target port (e.g., 80 for HTTP)
-        --threads <NUM>      Number of async tasks (default: 4, max: 100)
-        --rate <PPS>         Packets per second per thread (default: 100)
-    -d, --duration <SECONDS> Test duration in seconds (default: unlimited)
-    -h, --help               Print help information
-    -V, --version            Print version information
+    -t, --target <IP>              Target router IP (must be private range, e.g., 192.168.1.1)
+    -p, --ports <PORTS>            Target ports (comma-separated, e.g., 80,443,22)
+        --threads <NUM>            Number of async tasks (default: 4, max: 100)
+        --rate <PPS>               Packets per second per thread (default: 100, max: 10,000)
+    -d, --duration <SECONDS>       Test duration in seconds (default: unlimited)
+    -c, --config <FILE>            YAML configuration file path (default: router_flood_config.yaml)
+    -i, --interface <NAME>         Network interface to use (default: auto-detect)
+        --export <FORMAT>          Export statistics (json, csv, both)
+        --list-interfaces          List available network interfaces
+        --dry-run                  Simulate the attack without sending packets
+    -h, --help                     Print help information
+    -V, --version                  Print version information
 ```
+
+### Examples
+
+1. **Basic Simulation**:
+   ```
+   sudo ./target/release/router-flood --target 192.168.1.1 --ports 80,443 --threads 8 --rate 500 --duration 60
+   ```
+
+2. **Dry-Run for Testing**:
+   ```
+   ./target/release/router-flood --target 192.168.1.1 --ports 80 --dry-run
+   ```
+
+3. **With Config File and Export**:
+   ```
+   sudo ./target/release/router-flood --config custom_config.yaml --export json
+   ```
+
+4. **List Interfaces**:
+   ```
+   ./target/release/router-flood --list-interfaces
+   ```
 
 ### Configuration File
 
-The tool supports JSON configuration files for advanced scenarios:
+Use a YAML file (default: `router_flood_config.yaml`) for advanced settings. CLI flags override config values.
 
-```json
-{
-  "target": {
-    "ip": "192.168.1.1",
-    "ports": [80, 443, 22, 53],
-    "protocol_mix": {
-      "udp_ratio": 0.6,
-      "tcp_syn_ratio": 0.3,
-      "tcp_ack_ratio": 0.05,
-      "icmp_ratio": 0.05
-    }
-  },
-  "attack": {
-    "threads": 4,
-    "packet_rate": 100,
-    "duration": 60,
-    "packet_size_range": [64, 1400],
-    "patterns": [
-      {
-        "name": "http_flood",
-        "description": "HTTP GET flood pattern",
-        "enabled": true,
-        "weight": 0.4
-      }
-    ]
-  },
-  "safety": {
-    "max_threads": 100,
-    "max_packet_rate": 10000,
-    "require_private_ranges": true,
-    "enable_monitoring": true
-  }
-}
+Example `router_flood_config.yaml`:
+
+```yaml
+target:
+  ip: "192.168.1.1"
+  ports: [80, 443]
+  protocol_mix:
+    udp_ratio: 0.6
+    tcp_syn_ratio: 0.25
+    tcp_ack_ratio: 0.05
+    icmp_ratio: 0.05
+    ipv6_ratio: 0.03
+    arp_ratio: 0.02
+  interface: "eth0"
+
+attack:
+  threads: 4
+  packet_rate: 100
+  duration: 300
+  packet_size_range: [20, 1400]
+  burst_pattern:
+    Sustained:
+      rate: 100
+  randomize_timing: true
+
+safety:
+  max_threads: 100
+  max_packet_rate: 10000
+  require_private_ranges: true
+  enable_monitoring: true
+  audit_logging: true
+  dry_run: false
+
+monitoring:
+  stats_interval: 5
+  system_monitoring: true
+  export_interval: 60
+  performance_tracking: true
+
+export:
+  enabled: true
+  format: Json
+  filename_pattern: "router_flood"
+  include_system_stats: true
 ```
 
-## 🧪 Real-World Testing Scenarios
+## Output and Monitoring
 
-### Router Resilience Testing
+- **Real-Time Stats**: Printed every 5 seconds (configurable), including packets sent, failed, rate (PPS/Mbps), and protocol breakdown.
+- **System Stats**: CPU and memory usage (if enabled).
+- **Exports**: Saved to `exports/` directory as JSON/CSV files with session details.
+- **Audit Logs**: JSON entries appended to `router_flood_audit.log` for each session.
 
-Test your home router's ability to handle traffic spikes:
+## Safety and Ethical Considerations
 
-```bash
-# Test HTTP service resilience
-sudo router-flood --target 192.168.1.1 --port 80 --threads 4 --rate 200 --duration 30
+- **Private Networks Only**: Targets are validated against RFC 1918 private ranges.
+- **Limits**: Hard-coded caps on threads and rates to prevent overwhelming systems.
+- **Dry-Run**: Ideal for validating configs without risk.
+- **Logging**: All actions are audited for accountability.
 
-# Test DNS service under load
-sudo router-flood --target 192.168.1.1 --port 53 --threads 2 --rate 100 --duration 60
+If you encounter issues or need to report misuse, open an issue on GitHub.
 
-# Test SSH brute-force protection
-sudo router-flood --target 192.168.1.1 --port 22 --threads 1 --rate 10 --duration 120
-```
+## Contributing
 
-### Enterprise Network Testing
+Contributions are welcome! Please follow these steps:
 
-For enterprise environments (with proper authorization):
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/YourFeature`).
+3. Commit changes (`git commit -m 'Add YourFeature'`).
+4. Push to the branch (`git push origin feature/YourFeature`).
+5. Open a Pull Request.
 
-```bash
-# Load balancer stress test
-sudo router-flood --target 10.0.1.100 --port 80 --threads 16 --rate 1000 --duration 300
+Ensure code follows Rust idioms and includes tests where possible.
 
-# Firewall rule testing
-sudo router-flood --target 172.16.0.1 --port 443 --threads 8 --rate 500 --duration 180
-```
+## License
 
-### Performance Benchmarking
-
-Monitor system resources during tests:
-
-```bash
-# Terminal 1: Run the flood test
-sudo router-flood --target 192.168.1.1 --port 80 --threads 8 --rate 800
-
-# Terminal 2: Monitor system resources
-htop
-
-# Terminal 3: Monitor network traffic
-sudo iftop -i eth0
-
-# Terminal 4: Monitor target device (if accessible)
-ping 192.168.1.1
-```
-
-## 📊 Understanding the Output
-
-### Real-time Statistics
-
-```
-🚀 Starting Enhanced Router Flood Simulation
-   Target: 192.168.1.1:80
-   Threads: 4, Rate: 100 pps/thread
-   Duration: 60 seconds
-   Press Ctrl+C to stop gracefully
-
-📊 Stats - Sent: 2048, Failed: 0, Rate: 341.3 pps, 2.7 Mbps
-📊 Stats - Sent: 4096, Failed: 2, Rate: 409.6 pps, 3.3 Mbps
-📊 Stats - Sent: 6144, Failed: 5, Rate: 409.6 pps, 3.3 Mbps
-```
-
-**Metrics Explanation:**
-- **Sent**: Successfully transmitted packets
-- **Failed**: Packets that couldn't be sent (usually due to rate limiting)
-- **Rate (pps)**: Packets per second achieved
-- **Mbps**: Megabits per second bandwidth utilization
-
-### Performance Optimization
-
-**High Performance Settings:**
-```bash
-# Maximum safe load test
-sudo router-flood --target 192.168.1.1 --port 80 --threads 16 --rate 1000
-```
-
-**Conservative Testing:**
-```bash
-# Gentle stress test
-sudo router-flood --target 192.168.1.1 --port 80 --threads 2 --rate 50
-```
-
-## 🔌 Plugin System
-
-### Built-in Plugins
-
-1. **HTTP Flood**: Realistic HTTP GET request simulation
-2. **DNS Flood**: DNS query pattern with various record types
-3. **SYN Flood**: TCP SYN flood with randomized parameters
-4. **Stats Exporter**: JSON/CSV statistics export
-5. **Network Monitor**: Real-time network condition monitoring
-
-### Creating Custom Plugins
-
-```rust
-use crate::config::{AttackPatternPlugin, TargetConfig};
-use std::collections::HashMap;
-
-pub struct CustomFloodPattern {
-    // Your custom fields
-}
-
-impl AttackPatternPlugin for CustomFloodPattern {
-    fn name(&self) -> &str { "custom_flood" }
-    
-    fn description(&self) -> &str { "Custom flood pattern" }
-    
-    fn generate_packet(&mut self, target: &TargetConfig) -> Vec<u8> {
-        // Your packet generation logic
-        vec![]
-    }
-    
-    fn configure(&mut self, config: &HashMap<String, serde_json::Value>) -> Result<(), String> {
-        // Configuration logic
-        Ok(())
-    }
-}
-```
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-**Permission Denied:**
-```bash
-Error: This program requires root privileges for raw socket access.
-```
-**Solution:** Run with `sudo` or as root user.
-
-**Target Validation Error:**
-```bash
-❌ Security Error: Target IP 8.8.8.8 is not in private range.
-```
-**Solution:** Only use private IP addresses (192.168.x.x, 10.x.x.x, 172.16-31.x.x).
-
-**High Failure Rate:**
-```bash
-📊 Stats - Sent: 100, Failed: 500, Rate: 20.0 pps, 0.2 Mbps
-```
-**Solution:** Reduce packet rate or thread count. Your network interface may be saturated.
-
-### Performance Tuning
-
-**System Limits:**
-```bash
-# Increase file descriptor limits
-ulimit -n 65536
-
-# Optimize network buffers
-echo 'net.core.rmem_max = 26214400' >> /etc/sysctl.conf
-echo 'net.core.rmem_default = 26214400' >> /etc/sysctl.conf
-sudo sysctl -p
-```
-
-**Network Interface:**
-```bash
-# Check interface capacity
-ethtool eth0
-
-# Monitor interface statistics
-cat /proc/net/dev
-```
-
-## 🛡️ Security Considerations
-
-### Built-in Safety Mechanisms
-
-1. **IP Range Validation**: Automatically blocks public IP targeting
-2. **Rate Limiting**: Configurable maximum packet rates
-3. **Thread Limiting**: Maximum concurrent task limits  
-4. **Duration Control**: Automatic test timeouts
-5. **Graceful Shutdown**: Proper cleanup on interruption
-
-### Best Practices
-
-- **Always** test in isolated environments first
-- **Monitor** target device resources during testing
-- **Document** all testing activities for compliance
-- **Limit** test duration to prevent service disruption
-- **Coordinate** with network administrators before testing
-
-## 📈 Performance Metrics
-
-### Benchmarks (Test Environment)
-
-**Hardware:** Intel i7-9700K, 32GB RAM, Gigabit Ethernet
-**Target:** Home router (Netgear R7000)
-
-| Threads | Rate/Thread | Total PPS | Bandwidth | CPU Usage |
-|---------|-------------|-----------|-----------|-----------|
-| 4       | 100         | 400       | 3.2 Mbps  | 15%       |
-| 8       | 200         | 1600      | 12.8 Mbps | 35%       |
-| 16      | 500         | 8000      | 64 Mbps   | 75%       |
-
-### Scaling Recommendations
-
-- **Home Router Testing**: 2-4 threads, 50-200 pps/thread
-- **Enterprise Equipment**: 8-16 threads, 200-1000 pps/thread  
-- **High-End Hardware**: 16+ threads, 1000+ pps/thread
-
-## 🧪 Testing Methodologies
-
-### Baseline Establishment
-1. **Normal Load Testing**: Establish baseline performance metrics
-2. **Incremental Scaling**: Gradually increase load to find breaking points  
-3. **Recovery Testing**: Verify service recovery after load removal
-
-### Stress Testing Patterns
-1. **Sustained Load**: Continuous moderate traffic
-2. **Burst Testing**: Short high-intensity bursts
-3. **Ramp Testing**: Gradually increasing load over time
-4. **Mixed Protocol**: Combine UDP, TCP, and ICMP traffic
-
-## 📚 Educational Resources
-
-### Network Security Concepts
-- **DDoS Attack Types**: Volumetric, Protocol, Application Layer
-- **Mitigation Strategies**: Rate limiting, Traffic shaping, DPI
-- **Network Forensics**: Packet analysis, Traffic pattern recognition
-
-### Recommended Reading
-- "Network Security Essentials" by William Stallings
-- "DDoS Attacks and Defenses" by Ramin Sadre
-- RFC 4987: TCP SYN Flooding Attacks and Common Mitigations
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
-
-### Development Setup
-```bash
-git clone https://github.com/yourusername/router-flood.git
-cd router-flood
-cargo test
-cargo clippy
-cargo fmt
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## ⚖️ Legal Disclaimer
-
-This software is provided for educational and authorized testing purposes only. Users are solely responsible for complying with applicable laws and regulations. The authors disclaim any responsibility for misuse of this software.
-
-**REMEMBER: Only test networks you own or have explicit written permission to test.**
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.

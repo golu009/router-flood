@@ -1016,7 +1016,7 @@ async fn main() {
         .init();
     
     let matches = Command::new("Router Flood - Enhanced Network Stress Tester")
-        .version("3.0")
+        .version(env!("CARGO_PKG_VERSION"))  // Dynamically pulls from Cargo.toml
         .about("Educational DDoS simulation for local network testing with multi-protocol support")
         .arg(
             Arg::new("target")
