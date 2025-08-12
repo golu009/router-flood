@@ -79,12 +79,18 @@ impl Simulation {
             _ = tokio::signal::ctrl_c() => {
                 info!("🛑 Received Ctrl+C, shutting down gracefully...");
                 self.running.store(false, Ordering::Relaxed);
+                worker_manager.stop();
             }
-            result = worker_manager.join_all() => {
-                if let Err(e) = result {
-                    error!("Worker error: {}", e);
-                }
+            _ = self.wait_for_duration() => {
+                info!("⏰ Duration reached, stopping...");
+                self.running.store(false, Ordering::Relaxed);
+                worker_manager.stop();
             }
+        }
+
+        // Wait for workers to complete
+        if let Err(e) = worker_manager.join_all().await {
+            error!("Worker error: {}", e);
         }
 
         self.finalize_simulation().await?;
@@ -172,7 +178,6 @@ impl Simulation {
     fn spawn_monitoring_tasks(&self) {
         self.spawn_stats_reporter();
         self.spawn_export_task();
-        self.spawn_duration_timer();
     }
 
     /// Spawn statistics reporting task
@@ -210,15 +215,13 @@ impl Simulation {
         }
     }
 
-    /// Spawn duration timer if specified
-    fn spawn_duration_timer(&self) {
+    /// Wait for duration timeout if specified
+    async fn wait_for_duration(&self) {
         if let Some(duration_secs) = self.config.attack.duration {
-            let running = self.running.clone();
-            tokio::spawn(async move {
-                time::sleep(StdDuration::from_secs(duration_secs)).await;
-                running.store(false, Ordering::Relaxed);
-                info!("⏰ Duration reached, stopping...");
-            });
+            time::sleep(StdDuration::from_secs(duration_secs)).await;
+        } else {
+            // If no duration specified, wait indefinitely (this branch will never complete)
+            std::future::pending().await
         }
     }
 

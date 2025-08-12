@@ -72,11 +72,28 @@ pub struct ExportConfig {
     pub include_system_stats: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum ExportFormat {
     Json,
     Csv,
     Both,
+}
+
+impl std::str::FromStr for ExportFormat {
+    type Err = ConfigError;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "json" => Ok(ExportFormat::Json),
+            "csv" => Ok(ExportFormat::Csv),
+            "both" => Ok(ExportFormat::Both),
+            _ => Err(ConfigError::InvalidValue {
+                field: "format".to_string(),
+                value: s.to_string(),
+                reason: "Must be 'json', 'csv', or 'both'".to_string(),
+            }),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

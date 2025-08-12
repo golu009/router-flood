@@ -14,7 +14,7 @@ use rand::{Rng, SeedableRng};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 /// Supported packet types for enhanced flood simulation
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PacketType {
     Udp,
     TcpSyn,
@@ -24,6 +24,21 @@ pub enum PacketType {
     Ipv6Tcp,
     Ipv6Icmp,
     Arp,
+}
+
+impl std::fmt::Display for PacketType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PacketType::Udp => write!(f, "UDP"),
+            PacketType::TcpSyn => write!(f, "TCP-SYN"),
+            PacketType::TcpAck => write!(f, "TCP-ACK"),
+            PacketType::Icmp => write!(f, "ICMP"),
+            PacketType::Ipv6Udp => write!(f, "IPv6-UDP"),
+            PacketType::Ipv6Tcp => write!(f, "IPv6-TCP"),
+            PacketType::Ipv6Icmp => write!(f, "IPv6-ICMP"),
+            PacketType::Arp => write!(f, "ARP"),
+        }
+    }
 }
 
 /// Enhanced packet builder with multiple protocol support and realistic traffic patterns
