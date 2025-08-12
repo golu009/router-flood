@@ -5,7 +5,7 @@ All notable changes to the Router Flood project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.1] - 2025-01-12
+## [0.0.1] - 2025-08-12
 
 ### Added
 
@@ -79,20 +79,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (Recent Development)
 
-#### Monitor Tests (2025-01-12)
+#### Monitor Tests (2025-08-12)
 - **Compilation Errors**: Fixed missing `SystemStats` import in monitor tests
 - **Import Issues**: Added proper import statement `use router_flood::stats::SystemStats;`
 - **Unused Variables**: Fixed unused variable warnings by prefixing with underscores
 - **Test Coverage**: All 10 monitor tests now passing successfully
 
-#### Configuration Tests (2025-01-12)
+#### Configuration Tests (2025-08-12)
 - **YAML Format Issues**: Fixed YAML configuration format to match current enum serialization
 - **Missing Fields**: Added all required configuration fields (`packet_size_range`, `burst_pattern`, etc.)
 - **Enum Serialization**: Corrected YAML tag format for `BurstPattern` enum (using `!Sustained` syntax)
 - **Field Naming**: Fixed field name mismatches (`filename_pattern` vs `directory`)
 - **Variant Names**: Corrected enum variant capitalization (`Json` vs `"json"`)
 
-#### Error Tests (2025-01-12)
+#### Error Tests (2025-08-12)
 - **Message Format**: Updated error test expectations to match actual error message formats
 - **ConfigError Format**: Fixed format from `"Invalid value for field 'threads': 'abc' - must be a number"` to `"Invalid value 'abc' for field 'threads': must be a number"`
 - **ValidationError Format**: Fixed format from `"Invalid IP address 8.8.8.8: not in private range"` to `"IP address 8.8.8.8 is invalid: not in private range"`
