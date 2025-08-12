@@ -246,7 +246,7 @@ src/
 ```json
 {
   "session_id": "550e8400-e29b-41d4-a716-446655440000",
-  "timestamp": "2025-01-12T16:44:28Z",
+  "timestamp": "2025-08-12T16:44:28Z",
   "packets_sent": 15420,
   "packets_failed": 23,
   "bytes_sent": 18504000,
