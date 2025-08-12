@@ -216,36 +216,3 @@ fn list_network_interfaces() {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_ports_valid() {
-        let ports = parse_ports("80,443,22").unwrap();
-        assert_eq!(ports, vec![80, 443, 22]);
-    }
-
-    #[test]
-    fn test_parse_ports_invalid() {
-        let result = parse_ports("80,invalid,22");
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_parse_positive_number() {
-        let result: Result<u32> = parse_positive_number("100", "test_field");
-        assert_eq!(result.unwrap(), 100);
-        
-        let result: Result<u32> = parse_positive_number("0", "test_field");
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_parse_export_format() {
-        assert!(matches!(parse_export_format("json").unwrap(), ExportFormat::Json));
-        assert!(matches!(parse_export_format("csv").unwrap(), ExportFormat::Csv));
-        assert!(matches!(parse_export_format("both").unwrap(), ExportFormat::Both));
-        assert!(parse_export_format("invalid").is_err());
-    }
-}

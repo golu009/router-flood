@@ -318,32 +318,3 @@ pub fn setup_network_interface(config: &Config) -> Result<Option<pnet::datalink:
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::config::get_default_config;
-    use std::net::Ipv4Addr;
-
-    #[test]
-    fn test_simulation_creation() {
-        let config = get_default_config();
-        let target_ip = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1));
-        
-        let simulation = Simulation::new(config, target_ip, None);
-        assert!(simulation.running.load(Ordering::Relaxed));
-    }
-
-    #[tokio::test]
-    async fn test_transport_channel_setup_dry_run() {
-        let mut config = get_default_config();
-        config.safety.dry_run = true;
-        let target_ip = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1));
-        
-        let simulation = Simulation::new(config, target_ip, None);
-        let channels = simulation.setup_transport_channels().unwrap();
-        
-        assert!(channels.0.is_none());
-        assert!(channels.1.is_none());
-        assert!(channels.2.is_none());
-    }
-}

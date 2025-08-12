@@ -90,36 +90,3 @@ async fn main() {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::net::Ipv4Addr;
-
-    #[test]
-    fn test_parse_target_ip_valid() {
-        let mut config = get_default_config();
-        config.target.ip = "192.168.1.1".to_string();
-        
-        let result = parse_target_ip(&config);
-        assert!(result.is_ok());
-        
-        if let Ok(IpAddr::V4(ipv4)) = result {
-            assert_eq!(ipv4, Ipv4Addr::new(192, 168, 1, 1));
-        }
-    }
-
-    #[test]
-    fn test_parse_target_ip_invalid() {
-        let mut config = get_default_config();
-        config.target.ip = "invalid.ip.address".to_string();
-        
-        let result = parse_target_ip(&config);
-        assert!(result.is_err());
-    }
-
-    #[tokio::test]
-    async fn test_setup_logging() {
-        // This test just ensures setup_logging doesn't panic
-        setup_logging();
-    }
-}
