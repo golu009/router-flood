@@ -3,7 +3,7 @@
 ![Rust](https://img.shields.io/badge/Rust-1.70%2B-orange?logo=rust)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 ![Version](https://img.shields.io/badge/Version-0.0.1-green)
-![Build](https://img.shields.io/badge/Build-Passing-brightgreen)
+![Build](https://github.com/PaulShpilsher/router-flood/workflows/Rust/badge.svg)
 ![Tests](https://img.shields.io/badge/Tests-140%20Passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/Coverage-Comprehensive-green)
 
@@ -356,6 +356,56 @@ safety:
   max_threads: 4          # Lower limits
   max_packet_rate: 200
 ```
+
+## 🔄 Continuous Integration & Deployment
+
+### GitHub Actions Workflow
+
+Router Flood uses GitHub Actions for automated testing and quality assurance:
+
+**Workflow Configuration** (`.github/workflows/rust.yml`):
+- **Triggers**: Pushes and Pull Requests to `main` branch
+- **Environment**: Ubuntu Latest with Rust toolchain
+- **Steps**: Build verification and comprehensive test execution
+
+**Automated Checks:**
+- ✅ **Build Verification**: `cargo build --verbose` ensures compilation success
+- ✅ **Test Execution**: `cargo test --verbose` runs all 140 tests
+- ✅ **Cross-platform**: Tested on Ubuntu (Linux environment)
+- ✅ **Dependency Validation**: Automatic dependency resolution and caching
+
+**Build Status**: ![Build Status](https://github.com/PaulShpilsher/router-flood/workflows/Rust/badge.svg)
+
+**Workflow Triggers:**
+```yaml
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+```
+
+**Quality Gates:**
+- All 140 tests must pass before merge
+- Build must complete successfully on Ubuntu
+- No compilation errors or warnings allowed
+- Comprehensive test coverage verification
+
+### Local Development Integration
+
+The CI/CD pipeline mirrors local development practices:
+
+```bash
+# Same commands used in CI
+cargo build --verbose    # Build verification
+cargo test --verbose     # Full test suite
+```
+
+**Benefits:**
+- **Early Detection**: Issues caught before merge
+- **Consistent Quality**: Same standards across all contributions
+- **Automated Testing**: No manual test execution required
+- **Build Confidence**: Green builds indicate stable code
 
 ## 🧪 Testing & Development
 

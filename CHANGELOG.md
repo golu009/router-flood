@@ -42,6 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Flexible Parameters**: Support for target IP, ports, threads, rate, duration, and export options
 - **Configuration Integration**: CLI parameters override YAML configuration values
 
+#### CI/CD Pipeline
+- **GitHub Actions Integration**: Automated build and test pipeline for quality assurance
+- **Automated Testing**: All 140 tests run automatically on push and pull requests
+- **Build Verification**: Continuous integration ensures compilation success across commits
+- **Quality Gates**: Enforced standards with mandatory test passing before merge
+- **Ubuntu Testing**: Cross-platform validation on Ubuntu Latest environment
+
 #### Architecture & Modules
 - **Modular Design**: 14 well-organized modules for maintainability and extensibility
 - **Error Handling**: Comprehensive error types and handling using custom error enums

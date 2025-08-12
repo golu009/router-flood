@@ -7,12 +7,13 @@ This document summarizes the comprehensive documentation update performed on 202
 ### ✅ Updated Files
 
 #### 1. README.md (Major Update)
-- **Enhanced Badges**: Added test count (140) and coverage status badges
+- **Enhanced Badges**: Added test count (140) and coverage status badges, including live GitHub Actions build badge
 - **Dependency Documentation**: Updated to reflect current Cargo.toml with exact versions
 - **Configuration Examples**: Fixed YAML examples to show correct enum tag format (`!Sustained`)
 - **Test Coverage Section**: Comprehensive breakdown of all 140 tests across 14 modules
 - **Technical Specifications**: Enhanced architecture documentation and module descriptions
 - **YAML Format Notes**: Added important notes about enum serialization requirements
+- **CI/CD Documentation**: New comprehensive section documenting GitHub Actions workflow and quality gates
 
 #### 2. router_flood_config.yaml (Format Fixes)
 - **YAML Tags**: Fixed burst pattern format to use `!Sustained` syntax
@@ -35,9 +36,10 @@ This document summarizes the comprehensive documentation update performed on 202
 - **Development Setup**: Complete environment setup instructions
 - **Code Style Guidelines**: Rust-specific style and documentation standards
 - **Testing Requirements**: Comprehensive testing guidelines and examples
-- **Pull Request Process**: Detailed review process with safety checklist
+- **Pull Request Process**: Detailed review process with safety checklist and CI/CD integration
 - **Architecture Guidelines**: Module organization and design principles
 - **Issue Reporting**: Templates for bugs and feature requests
+- **CI/CD Pipeline Documentation**: Comprehensive GitHub Actions workflow explanation and requirements
 
 #### 3. DOCUMENTATION_UPDATE.md (This File)
 - **Summary**: Complete overview of documentation improvements

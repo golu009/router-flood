@@ -347,15 +347,49 @@ Fixes #(issue number)
 
 ### Review Process
 
-1. **Automated Checks**: CI/CD pipeline runs tests and linting
+1. **Automated Checks**: GitHub Actions CI/CD pipeline runs comprehensive validation:
+   - **Build Verification**: `cargo build --verbose` ensures compilation success
+   - **Test Execution**: `cargo test --verbose` runs all 140 tests
+   - **Quality Gates**: All tests must pass before merge approval
+   - **Cross-Platform**: Validation on Ubuntu Latest environment
+
 2. **Code Review**: Maintainers review for:
    - Code quality and style
    - Security implications
    - Test coverage
    - Documentation completeness
+
 3. **Testing**: Manual testing of new features
 4. **Approval**: Two maintainer approvals required
 5. **Merge**: Squash and merge to main branch
+
+### CI/CD Pipeline
+
+**Workflow Location**: `.github/workflows/rust.yml`
+
+**Automatic Triggers:**
+- Push to `main` branch
+- Pull requests targeting `main` branch
+
+**Pipeline Steps:**
+```yaml
+- uses: actions/checkout@v4
+- name: Build
+  run: cargo build --verbose
+- name: Run tests
+  run: cargo test --verbose
+```
+
+**Quality Requirements:**
+- ✅ All 140 tests must pass
+- ✅ Build must complete without errors
+- ✅ No compilation failures allowed
+- ✅ Ubuntu environment compatibility required
+
+**Status Monitoring:**
+- Build status badge in README.md
+- GitHub Actions tab shows detailed results
+- Failed builds block pull request merging
 
 ## 🐛 Issue Reporting
 

@@ -1,2 +1,0 @@
-{"timestamp":"2025-08-12T06:51:34.720243764Z","event_type":"flood_simulation_start","target_ip":"192.168.1.1","target_ports":[80,443],"threads":2,"packet_rate":100,"duration":5,"user":"psp","interface":"wlp0s20f3","session_id":"c73f1b9e-6550-4691-96b3-2ef22d5e0b12"}
-{"timestamp":"2025-08-12T07:00:04.324887658Z","event_type":"flood_simulation_start","target_ip":"192.168.1.100","target_ports":[80,443,22],"threads":4,"packet_rate":100,"duration":3,"user":"psp","interface":"wlp0s20f3","session_id":"2bfc609d-0d69-476b-9ada-9879dce73485"}
